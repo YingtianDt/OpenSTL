@@ -35,11 +35,11 @@ class PredRNN_Model(nn.Module):
         self.conv_last = nn.Conv2d(num_hidden[num_layers - 1], self.frame_channel,
                                    kernel_size=1, stride=1, padding=0, bias=False)
 
-    def forward(self, frames_tensor, mask_true, **kwargs):
+    def forward(self, frames_tensor, mask_true=None, **kwargs):
         # [batch, length, height, width, channel] -> [batch, length, channel, height, width]
         device = frames_tensor.device
         frames = frames_tensor.permute(0, 1, 4, 2, 3).contiguous()
-        mask_true = mask_true.permute(0, 1, 4, 2, 3).contiguous()
+        # mask_true = mask_true.permute(0, 1, 4, 2, 3).contiguous()
 
         batch = frames.shape[0]
         height = frames.shape[3]
@@ -58,19 +58,22 @@ class PredRNN_Model(nn.Module):
         memory = torch.zeros(
             [batch, self.num_hidden[0], height, width]).to(device)
 
-        for t in range(self.configs.pre_seq_length + self.configs.aft_seq_length - 1):
-            # reverse schedule sampling
-            if self.configs.reverse_scheduled_sampling == 1:
-                if t == 0:
-                    net = frames[:, t]
-                else:
-                    net = mask_true[:, t - 1] * frames[:, t] + (1 - mask_true[:, t - 1]) * x_gen
-            else:
-                if t < self.configs.pre_seq_length:
-                    net = frames[:, t]
-                else:
-                    net = mask_true[:, t - self.configs.pre_seq_length] * frames[:, t] + \
-                          (1 - mask_true[:, t - self.configs.pre_seq_length]) * x_gen
+        # for t in range(self.configs.pre_seq_length + self.configs.aft_seq_length - 1):
+        #     # reverse schedule sampling
+        #     if self.configs.reverse_scheduled_sampling == 1:
+        #         if t == 0:
+        #             net = frames[:, t]
+        #         else:
+        #             net = mask_true[:, t - 1] * frames[:, t] + (1 - mask_true[:, t - 1]) * x_gen
+        #     else:
+        #         if t < self.configs.pre_seq_length:
+        #             net = frames[:, t]
+        #         else:
+        #             net = mask_true[:, t - self.configs.pre_seq_length] * frames[:, t] + \
+        #                   (1 - mask_true[:, t - self.configs.pre_seq_length]) * x_gen
+
+        for t in range(frames_tensor.size(1)):
+            net = frames[:, t]
 
             h_t[0], c_t[0], memory = self.cell_list[0](net, h_t[0], c_t[0], memory)
 

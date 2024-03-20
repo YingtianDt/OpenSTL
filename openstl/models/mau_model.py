@@ -105,11 +105,11 @@ class MAU_Model(nn.Module):
         self.conv_last_sr = nn.Conv2d(
             self.frame_channel * 2, self.frame_channel, kernel_size=1, stride=1, padding=0)
 
-    def forward(self, frames_tensor, mask_true, **kwargs):
+    def forward(self, frames_tensor, mask_true=None, **kwargs):
         # [batch, length, height, width, channel] -> [batch, length, channel, height, width]
         device = frames_tensor.device
         frames = frames_tensor.permute(0, 1, 4, 2, 3).contiguous()
-        mask_true = mask_true.permute(0, 1, 4, 2, 3).contiguous()
+        # mask_true = mask_true.permute(0, 1, 4, 2, 3).contiguous()
 
         batch_size = frames.shape[0]
         height = frames.shape[3] // self.configs.sr_size
@@ -135,12 +135,16 @@ class MAU_Model(nn.Module):
             T_pre.append(tmp_t)
             S_pre.append(tmp_s)
 
-        for t in range(self.configs.total_length - 1):
-            if t < self.configs.pre_seq_length:
-                net = frames[:, t]
-            else:
-                time_diff = t - self.configs.pre_seq_length
-                net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
+        # for t in range(self.configs.total_length - 1):
+        #     if t < self.configs.pre_seq_length:
+        #         net = frames[:, t]
+        #     else:
+        #         time_diff = t - self.configs.pre_seq_length
+        #         net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
+            
+        for t in range(frames_tensor.size(1)):
+            net = frames[:, t]
+            
             frames_feature = net
             frames_feature_encoded = []
             for i in range(len(self.encoders)):

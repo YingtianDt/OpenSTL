@@ -31,27 +31,27 @@ class PhyDNet_Model(nn.Module):
 
         self.criterion = nn.MSELoss()
 
-    def forward(self, input_tensor, target_tensor, constraints, teacher_forcing_ratio=0.0):
+    def forward(self, input_tensor, target_tensor=None, constraints=None, teacher_forcing_ratio=0.0):
         loss = 0
         for ei in range(self.pre_seq_length - 1):
             _, _, output_image, _, _ = self.encoder(input_tensor[:,ei,:,:,:], (ei==0))
-            loss += self.criterion(output_image, input_tensor[:,ei+1,:,:,:])
+            # loss += self.criterion(output_image, input_tensor[:,ei+1,:,:,:])
 
-        decoder_input = input_tensor[:,-1,:,:,:]
-        use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
-        for di in range(self.aft_seq_length):
-            _, _, output_image, _, _ = self.encoder(decoder_input)
-            target = target_tensor[:,di,:,:,:]
-            loss += self.criterion(output_image, target)
-            if use_teacher_forcing:
-                decoder_input = target
-            else:
-                decoder_input = output_image
+        # decoder_input = input_tensor[:,-1,:,:,:]
+        # use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
+        # for di in range(self.aft_seq_length):
+        #     _, _, output_image, _, _ = self.encoder(decoder_input)
+        #     target = target_tensor[:,di,:,:,:]
+        #     loss += self.criterion(output_image, target)
+        #     if use_teacher_forcing:
+        #         decoder_input = target
+        #     else:
+        #         decoder_input = output_image
 
-        for b in range(0, self.encoder.phycell.cell_list[0].input_dim):
-            filters = self.encoder.phycell.cell_list[0].F.conv1.weight[:,b,:,:]
-            m = self.k2m(filters.double()).float()
-            loss += self.criterion(m, constraints.to(m.device))
+        # for b in range(0, self.encoder.phycell.cell_list[0].input_dim):
+        #     filters = self.encoder.phycell.cell_list[0].F.conv1.weight[:,b,:,:]
+        #     m = self.k2m(filters.double()).float()
+        #     loss += self.criterion(m, constraints.to(m.device))
 
         return loss
 
