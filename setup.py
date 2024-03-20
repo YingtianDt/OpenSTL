@@ -106,7 +106,7 @@ if __name__ == '__main__':
         keywords='spatiotemporal predictive learning, video prediction, '
         'unsupervised spatiotemporal learning',
         url='https://github.com/chengtan9907/OpenSTL',
-        packages=find_packages(exclude=('configs', 'tools', 'demo')),
+        packages=find_packages(exclude=('configs', 'tools', 'demo', 'tests')),
         classifiers=[
             'Development Status :: 4 - Beta',
             'License :: OSI Approved :: Apache Software License',
